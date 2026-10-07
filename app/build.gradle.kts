@@ -86,7 +86,7 @@ dependencies {
   implementation(libs.zxing.core)
   implementation(libs.mlkit.barcode.scanning)
   implementation(libs.guava)
-  implementation(libs.unity.ads)
+  implementation(libs.play.services.ads)
   implementation(libs.androidx.compose.material.icons.core)
   implementation(libs.androidx.compose.material.icons.extended)
   implementation(libs.androidx.compose.material3)

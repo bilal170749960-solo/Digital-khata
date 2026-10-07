@@ -515,6 +515,21 @@ fun CustomerSettingsScreen(
                             modifier = Modifier.testTag("cust_vibration_switch")
                         )
                     }
+                    if (vibrationEnabled) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        OutlinedButton(
+                            onClick = { HapticManager.testVibration(context) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("cust_test_vibration_btn"),
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(vertical = 4.dp, horizontal = 12.dp)
+                        ) {
+                            Icon(Icons.Default.Vibration, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Test Vibration", fontSize = 12.sp)
+                        }
+                    }
                 }
             }
 
@@ -754,9 +769,9 @@ fun CustomerSettingsScreen(
                 }
             }
 
-            // DEBUG DIAGNOSTICS
+            // GOOGLE ADMOB TEST IDS & DIAGNOSTICS
             item {
-                com.example.ui.components.UnityAdsDiagnosticsCard()
+                com.example.ui.components.AdMobDiagnosticsCard()
             }
 
             // 8. ACCOUNT ACTIONS

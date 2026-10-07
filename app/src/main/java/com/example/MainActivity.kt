@@ -51,7 +51,7 @@ import com.example.ui.shopkeeper.ShopkeeperDashboardScreen
 import com.example.ui.shopkeeper.ShopkeeperKhataScreen
 import com.example.ui.shopkeeper.ShopkeeperRequestsScreen
 import com.example.ui.theme.DigitalKhataTheme
-import com.example.services.ads.UnityAdsManager
+import com.example.services.ads.AdMobManager
 import com.example.ui.viewmodel.KhataViewModel
 import com.example.utils.HapticManager
 
@@ -64,9 +64,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // Safely initialize HapticManager and Unity Ads in background
+        // Safely initialize HapticManager and AdMob in background
         HapticManager.init(applicationContext)
-        UnityAdsManager.initialize(this)
+        AdMobManager.initialize(this)
 
         setContent {
             val isAuthChecking by viewModel.isAuthChecking.collectAsState()
@@ -200,7 +200,7 @@ fun ShopkeeperAppContainer(viewModel: KhataViewModel) {
     BackHandler(enabled = currentTab == ShopkeeperTab.CUSTOMERS && activeKhataCustId != null) {
         HapticManager.backPress(context)
         viewModel.closeShopkeeperCustomerKhata()
-        UnityAdsManager.showInterstitialIfAllowed(context as? Activity)
+        AdMobManager.showInterstitialIfAllowed(context as? Activity)
     }
 
     // Subtab Back: when on any non-root tab, return to Home
@@ -390,7 +390,7 @@ fun ShopkeeperAppContainer(viewModel: KhataViewModel) {
                             onBack = {
                                 HapticManager.backPress(context)
                                 viewModel.closeShopkeeperCustomerKhata()
-                                UnityAdsManager.showInterstitialIfAllowed(context as? Activity)
+                                AdMobManager.showInterstitialIfAllowed(context as? Activity)
                             }
                         )
                     } else {
@@ -445,7 +445,7 @@ fun CustomerAppContainer(viewModel: KhataViewModel) {
     BackHandler(enabled = currentTab == CustomerTab.KHATA && activeConnectedKhata != null) {
         HapticManager.backPress(context)
         viewModel.closeCustomerKhataView()
-        UnityAdsManager.showInterstitialIfAllowed(context as? Activity)
+        AdMobManager.showInterstitialIfAllowed(context as? Activity)
     }
 
     // Subtab Back: when on any non-root tab, return to Home
@@ -624,7 +624,7 @@ fun CustomerAppContainer(viewModel: KhataViewModel) {
                             HapticManager.backPress(context)
                             if (activeConnectedKhata != null) {
                                 viewModel.closeCustomerKhataView()
-                                UnityAdsManager.showInterstitialIfAllowed(context as? Activity)
+                                AdMobManager.showInterstitialIfAllowed(context as? Activity)
                             } else {
                                 viewModel.setCustomerTab(CustomerTab.HOME)
                             }

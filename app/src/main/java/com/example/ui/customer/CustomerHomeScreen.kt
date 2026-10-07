@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.sp
 import com.example.data.model.ConnectedKhata
 import com.example.data.model.CustomerTab
 import com.example.data.model.QrLinkVerificationResult
-import com.example.services.ads.UnityBannerAd
+import com.example.services.ads.AdMobBannerAd
 import com.example.ui.qr.QRScannerScreen
 import com.example.ui.theme.KhataAmber
 import com.example.ui.theme.KhataGreenPrimary
@@ -488,9 +488,9 @@ fun CustomerHomeScreen(
                 }
             }
 
-            // Unity Ads Banner (positioned after khata cards, before bottom nav)
+            // Google AdMob Banner (positioned after khata cards, before bottom nav)
             item {
-                UnityBannerAd()
+                AdMobBannerAd()
             }
 
             // Bottom Spacing for FAB

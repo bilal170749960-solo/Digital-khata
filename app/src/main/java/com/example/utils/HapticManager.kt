@@ -2,24 +2,28 @@ package com.example.utils
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.media.AudioAttributes
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /**
- * Central Haptic Manager for Digital Khata.
- * Provides subtle, lightweight haptic feedback for page transitions, back presses,
- * and key interactions.
+ * Robust Central Haptic & Vibration Manager for Digital Khata.
+ * Provides noticeable, reliable tactile feedback for page transitions, back presses,
+ * and key user actions.
  *
  * Persists the user's Vibration ON/OFF preference across sessions via SharedPreferences.
- * Gracefully handles devices without vibration hardware or permission discrepancies.
+ * Gracefully handles all Android versions (including API 31+ VibratorManager, Android O VibrationEffect,
+ * and legacy vibrator fallbacks) and devices without vibration hardware.
  */
 object HapticManager {
 
+    private const val TAG = "HAPTIC"
     private const val PREFS_NAME = "digital_khata_haptics"
     private const val KEY_VIBRATION_ENABLED = "vibration_enabled"
 
@@ -37,6 +41,7 @@ object HapticManager {
             val enabled = prefs.getBoolean(KEY_VIBRATION_ENABLED, true)
             _vibrationEnabled.value = enabled
             isInitialized = true
+            Log.d(TAG, "HapticManager initialized: vibrationEnabled=$enabled")
         }
     }
 
@@ -59,8 +64,9 @@ object HapticManager {
         init(context)
         _vibrationEnabled.value = enabled
         getPrefs(context).edit().putBoolean(KEY_VIBRATION_ENABLED, enabled).apply()
+        Log.d(TAG, "Vibration preference set to: $enabled")
         if (enabled) {
-            performLightHaptic(context)
+            testVibration(context)
         }
     }
 
@@ -82,7 +88,7 @@ object HapticManager {
      * Triggered on meaningful positive actions (QR scanned, payment confirmed, etc.)
      */
     fun importantAction(context: Context) {
-        performLightHaptic(context)
+        performNoticeableHaptic(context)
     }
 
     /**
@@ -92,35 +98,74 @@ object HapticManager {
         if (!isVibrationEnabled(context)) return
         try {
             val vibrator = getVibrator(context) ?: return
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                vibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_DOUBLE_CLICK))
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                vibrator.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 20, 40, 20), -1))
+            if (!vibrator.hasVibrator()) return
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val effect = VibrationEffect.createWaveform(longArrayOf(0, 50, 70, 50), -1)
+                val audioAttributes = AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+                    .build()
+                vibrator.vibrate(effect, audioAttributes)
             } else {
                 @Suppress("DEPRECATION")
-                vibrator.vibrate(30)
+                vibrator.vibrate(longArrayOf(0, 50, 70, 50), -1)
             }
-        } catch (_: Exception) {}
+        } catch (e: Exception) {
+            Log.w(TAG, "Error performing error haptic: ${e.message}")
+        }
     }
 
     /**
-     * Executes standard light, subtle mobile UI haptic feedback.
-     * Guaranteed never to throw or crash if hardware is unavailable.
+     * Executes standard tactile mobile UI haptic feedback (45ms).
+     * Works reliably on all modern motors (ERM and LRA actuators).
      */
     fun performLightHaptic(context: Context) {
         if (!isVibrationEnabled(context)) return
+        vibrate(context, durationMs = 45L)
+    }
+
+    /**
+     * Executes slightly stronger haptic feedback for key operations (80ms).
+     */
+    fun performNoticeableHaptic(context: Context) {
+        if (!isVibrationEnabled(context)) return
+        vibrate(context, durationMs = 80L)
+    }
+
+    /**
+     * Test vibration used when user switches vibration ON or clicks Test Vibration in settings (100ms).
+     */
+    fun testVibration(context: Context) {
+        vibrate(context, durationMs = 100L)
+    }
+
+    /**
+     * Core universal vibration executor.
+     * Uses AudioAttributes to bypass notification silence filters for tactile feedback.
+     */
+    private fun vibrate(context: Context, durationMs: Long) {
         try {
             val vibrator = getVibrator(context) ?: return
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                vibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK))
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                vibrator.vibrate(VibrationEffect.createOneShot(15, VibrationEffect.DEFAULT_AMPLITUDE))
+            if (!vibrator.hasVibrator()) {
+                Log.d(TAG, "Device reports no physical vibrator motor")
+                return
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val effect = VibrationEffect.createOneShot(durationMs, VibrationEffect.DEFAULT_AMPLITUDE)
+                val audioAttributes = AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+                    .build()
+                vibrator.vibrate(effect, audioAttributes)
             } else {
                 @Suppress("DEPRECATION")
-                vibrator.vibrate(15)
+                vibrator.vibrate(durationMs)
             }
-        } catch (_: Exception) {
-            // Silently ignore if device doesn't support or permission issue
+            Log.d(TAG, "Vibrated successfully for ${durationMs}ms")
+        } catch (e: Exception) {
+            Log.w(TAG, "Vibration failed: ${e.message}")
         }
     }
 
@@ -128,12 +173,13 @@ object HapticManager {
         return try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
-                vibratorManager?.defaultVibrator
+                vibratorManager?.defaultVibrator ?: (context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator)
             } else {
                 @Suppress("DEPRECATION")
                 context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Log.w(TAG, "Could not acquire Vibrator service: ${e.message}")
             null
         }
     }

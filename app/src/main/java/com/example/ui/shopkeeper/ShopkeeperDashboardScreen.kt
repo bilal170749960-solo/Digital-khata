@@ -28,7 +28,7 @@ import com.example.data.model.PaymentStatus
 import com.example.ui.theme.KhataAmber
 import com.example.ui.theme.KhataGreenPrimary
 import com.example.ui.viewmodel.KhataViewModel
-import com.example.services.ads.UnityBannerAd
+import com.example.services.ads.AdMobBannerAd
 import com.example.utils.DateUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -670,9 +670,9 @@ fun ShopkeeperDashboardScreen(
             }
         }
 
-        // Secondary Unity Ads Banner
+        // Secondary Google AdMob Banner
         item {
-            UnityBannerAd()
+            AdMobBannerAd()
         }
 
         item {

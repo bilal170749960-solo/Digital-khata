@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.sp
 import com.example.data.model.Customer
 import com.example.ui.theme.KhataAmber
 import com.example.ui.viewmodel.KhataViewModel
-import com.example.services.ads.UnityBannerAd
+import com.example.services.ads.AdMobBannerAd
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -312,9 +312,9 @@ fun ShopkeeperCustomersScreen(
                 }
             }
 
-            // Unity Ads Banner
+            // Google AdMob Banner
             item {
-                UnityBannerAd()
+                AdMobBannerAd()
             }
 
             // Bottom spacing for FAB
